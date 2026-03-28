@@ -230,6 +230,7 @@ fn select_sector_target(
     army: &Army,
     sectors: &FrontlineSectors,
     faction_counts: &std::collections::HashMap<i32, Vec<Vec2>>,
+    frontline: &[Vec2],
 ) -> Vec2 {
     let friendly_positions = match faction_counts.get(&army.faction) {
         Some(p) => p,
@@ -278,7 +279,7 @@ fn select_sector_target(
     let mut closest_in_sector = Vec2::ZERO;
     let mut closest_d = f32::MAX;
     let target_x = sectors.sector_centers[best_idx].x;
-    for &fl in &detect_frontline_cached() {
+    for &fl in frontline {
         if (fl.x - target_x).abs() < 60.0 {
             let d = army.position.distance(fl);
             if d < closest_d {
@@ -293,20 +294,6 @@ fn select_sector_target(
     } else {
         best_sector
     }
-}
-
-thread_local! {
-    static CACHED_FRONTLINE: std::cell::RefCell<Vec<Vec2>> = std::cell::RefCell::new(Vec::new());
-}
-
-fn cache_frontline(frontline: Vec<Vec2>) {
-    CACHED_FRONTLINE.with(|f| {
-        *f.borrow_mut() = frontline;
-    });
-}
-
-fn detect_frontline_cached() -> Vec<Vec2> {
-    CACHED_FRONTLINE.with(|f| f.borrow().clone())
 }
 
 fn retreat_waypoint(
@@ -363,7 +350,7 @@ fn choose_target(
 
     if !frontline.is_empty() {
         let sectors = compute_frontline_sectors(frontline, army.faction, all_armies, grid);
-        return select_sector_target(army, &sectors, faction_counts);
+        return select_sector_target(army, &sectors, faction_counts, frontline);
     }
 
     let capital = nearest_friendly_capital(army, capitals);
@@ -392,9 +379,10 @@ pub fn assign_new_orders(
     grid: Res<Grid>,
     all_armies: Query<(Entity, &Army)>,
     capitals: Query<(&Capital, &Transform)>,
+    mut cached_frontline: ResMut<super::CachedFrontline>,
 ) {
     let frontline = detect_frontline(&grid);
-    cache_frontline(frontline.clone());
+    cached_frontline.0 = frontline.clone();
 
     let faction_counts = build_faction_positions(&all_armies);
 
@@ -428,13 +416,13 @@ pub fn assign_orders_timed(
     time: Res<Time>,
     all_armies: Query<(Entity, &Army)>,
     capitals: Query<(&Capital, &Transform)>,
+    cached_frontline: Res<super::CachedFrontline>,
 ) {
     if !timer.0.tick(time.delta()).finished() {
         return;
     }
 
-    let frontline = detect_frontline(&grid);
-    cache_frontline(frontline.clone());
+    let frontline = &cached_frontline.0;
 
     let faction_counts = build_faction_positions(&all_armies);
 
@@ -442,7 +430,7 @@ pub fn assign_orders_timed(
         let target = choose_target(
             army,
             entity,
-            &frontline,
+            frontline,
             &all_armies,
             &capitals,
             &faction_counts,
@@ -461,8 +449,8 @@ pub fn assign_orders_timed(
                 order.retreating = false;
                 if !frontline.is_empty() {
                     let sectors =
-                        compute_frontline_sectors(&frontline, army.faction, &all_armies, &grid);
-                    order.target = select_sector_target(army, &sectors, &faction_counts);
+                        compute_frontline_sectors(frontline, army.faction, &all_armies, &grid);
+                    order.target = select_sector_target(army, &sectors, &faction_counts, frontline);
                 }
             } else {
                 let capital = nearest_friendly_capital(army, &capitals);
@@ -490,8 +478,8 @@ pub fn assign_orders_timed(
         }
 
         if !frontline.is_empty() {
-            let sectors = compute_frontline_sectors(&frontline, army.faction, &all_armies, &grid);
-            order.target = select_sector_target(army, &sectors, &faction_counts);
+            let sectors = compute_frontline_sectors(frontline, army.faction, &all_armies, &grid);
+            order.target = select_sector_target(army, &sectors, &faction_counts, frontline);
         }
     }
 }

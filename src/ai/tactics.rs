@@ -1,7 +1,5 @@
 use crate::ai::components::{ArmyOrder, Flanking};
 use crate::army::Army;
-use crate::map::grid::Grid;
-use crate::simulation::detect_frontline;
 use bevy::prelude::*;
 
 const SALIENT_MIN_DEPTH: f32 = 30.0;
@@ -204,15 +202,14 @@ pub fn assign_flanking_orders(
     mut commands: Commands,
     mut armies: Query<(Entity, &Army, &mut ArmyOrder, Option<&Flanking>)>,
     all_armies: Query<(Entity, &Army)>,
-    grid: Res<Grid>,
     mut timer: ResMut<FlankTimer>,
     time: Res<Time>,
+    cached_frontline: Res<super::CachedFrontline>,
 ) {
     let ticked = timer.0.tick(time.delta()).just_finished();
 
     if !ticked {
-        let frontline = detect_frontline(&grid);
-        if frontline.len() < 5 {
+        if cached_frontline.0.len() < 5 {
             for (entity, _, _, _) in &mut armies {
                 commands.entity(entity).remove::<Flanking>();
             }
@@ -220,7 +217,7 @@ pub fn assign_flanking_orders(
         return;
     }
 
-    let frontline = detect_frontline(&grid);
+    let frontline = &cached_frontline.0;
 
     for (entity, _, _, flanking) in &mut armies {
         if flanking.is_some() {

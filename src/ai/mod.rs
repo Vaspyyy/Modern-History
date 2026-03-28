@@ -5,6 +5,11 @@ pub mod splitting;
 pub mod strategy;
 pub mod tactics;
 
+use bevy::prelude::*;
+
+#[derive(Resource, Default)]
+pub struct CachedFrontline(pub Vec<Vec2>);
+
 pub use components::{ArmyOrder, DefendingBreakthrough, Flanking};
 pub use decision::{assign_new_orders, assign_orders_timed};
 pub use defense::defend_breakthroughs;

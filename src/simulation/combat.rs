@@ -26,7 +26,7 @@ pub fn apply_combat(mut commands: Commands, mut armies: Query<(Entity, &mut Army
 
         army.strength -= total_damage;
 
-        if army.strength <= 100.0 {
+        if army.strength <= 50.0 {
             commands.entity(entity).despawn();
         }
     }

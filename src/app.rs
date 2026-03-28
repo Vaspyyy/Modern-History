@@ -3,6 +3,7 @@ use crate::ai::assign_flanking_orders;
 use crate::ai::assign_new_orders;
 use crate::ai::assign_orders_timed;
 use crate::ai::defend_breakthroughs;
+use crate::ai::CachedFrontline;
 use crate::ai::FlankTimer;
 use crate::ai::SplitTimer;
 use crate::army::consolidate_armies;
@@ -38,6 +39,7 @@ pub fn run() {
         .add_plugins(DefaultPlugins)
         .add_plugins(MapPlugin)
         .insert_resource(SpawnFaction::default())
+        .insert_resource(CachedFrontline::default())
         .insert_resource(AITimer(Timer::from_seconds(1.0, TimerMode::Repeating)))
         .insert_resource(ReinforceTimer(Timer::from_seconds(
             10.0,
@@ -71,21 +73,21 @@ pub fn run() {
             (
                 snapshot_control,
                 consolidate_armies,
-                apply_pressure,
-                apply_supply,
-                apply_combat,
-                update_control,
-                update_grid_visuals,
-                assign_flanking_orders,
-                assign_new_orders,
-                assign_orders_timed,
-                defend_breakthroughs,
-                ai_split_armies,
-                move_armies,
-                reinforce_from_capitals,
-                spawn_army_on_click,
-            ),
+                (apply_pressure, apply_supply, apply_combat).chain(),
+                (update_control, update_grid_visuals).chain(),
+                (
+                    assign_new_orders,
+                    assign_orders_timed,
+                    assign_flanking_orders,
+                    defend_breakthroughs,
+                    ai_split_armies,
+                )
+                    .chain(),
+                (move_armies, reinforce_from_capitals).chain(),
+            )
+                .chain(),
         )
+        .add_systems(Update, spawn_army_on_click)
         .run();
 }
 
