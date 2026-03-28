@@ -47,21 +47,14 @@ Phase 0 ── all independent, do immediately
 
 ## Known Bugs
 
-### KB-1. Supply/combat strength floor mismatch
-- `src/simulation/supply.rs:28` floors army strength at `100.0`
-- `src/simulation/combat.rs:29` despawns armies when `strength <= 100.0`
-- An army healed to exactly 100.0 by supply gets instantly killed by the combat check
-- **Fix:** use a shared constant (`MIN_ARMY_STRENGTH`) from `GameConfig`, or set the combat threshold lower (e.g. `50.0`)
+### ~~KB-1. Supply/combat strength floor mismatch~~ :white_check_mark:
+Fixed in TODO 0.6: combat despawn threshold set to `min_army_strength * 0.5`, supply floor uses shared `min_army_strength` from `GameConfig`.
 
-### KB-2. Fragile thread-local frontline cache
-- `src/ai/decision.rs:298-310` uses `thread_local!` static to pass frontline data between `assign_new_orders` and `assign_orders_timed`
-- Works only because both systems happen to run on the same Bevy frame — not guaranteed
-- **Fix:** replace with a proper Bevy `Resource` (e.g. `CachedFrontline(Vec<Vec2>)`) inserted by the first system and read by the second
+### ~~KB-2. Fragile thread-local frontline cache~~ :white_check_mark:
+Fixed in TODO 0.6: replaced `thread_local!` with `CachedFrontline` Bevy `Resource`, written by `assign_new_orders` and read by `assign_orders_timed` and `assign_flanking_orders`.
 
-### KB-3. No system ordering guarantees
-- `src/app.rs:72-87` — all `Update` systems have no explicit ordering
-- `apply_pressure` → `update_control` → `update_grid_visuals` must run in that order, but Bevy may schedule them in any order
-- **Fix:** use `.chain()` or explicit `SystemSet` ordering for the simulation pipeline
+### ~~KB-3. No system ordering guarantees~~ :white_check_mark:
+Fixed in TODO 0.6: added `.chain()` groups for snapshot → consolidate → simulation pipeline → AI pipeline → movement.
 
 ### KB-4. `faction as f32` cast in pressure system
 - `src/simulation/pressure.rs:35` — `army.faction as f32` works because faction is `-1` or `+1`
