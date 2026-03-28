@@ -1,8 +1,6 @@
 use crate::map::grid::Grid;
 use bevy::prelude::*;
 
-const SNAPSHOT_INTERVAL_SECS: f32 = 1.0;
-
 #[derive(Resource)]
 pub struct GridHistory {
     pub previous_control: Vec<f32>,
@@ -10,10 +8,10 @@ pub struct GridHistory {
 }
 
 impl GridHistory {
-    pub fn new(grid: &Grid) -> Self {
+    pub fn new(grid: &Grid, snapshot_interval: f32) -> Self {
         Self {
             previous_control: grid.cells.iter().map(|c| c.control).collect(),
-            timer: Timer::from_seconds(SNAPSHOT_INTERVAL_SECS, TimerMode::Repeating),
+            timer: Timer::from_seconds(snapshot_interval, TimerMode::Repeating),
         }
     }
 

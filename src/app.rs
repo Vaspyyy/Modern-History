@@ -13,6 +13,7 @@ use crate::army::spawn_army_on_click;
 use crate::army::spawn_initial_armies;
 use crate::army::ReinforceTimer;
 use crate::army::SpawnFaction;
+use crate::core::GameConfig;
 use crate::map::grid::Grid;
 use crate::map::setup_grid;
 use crate::map::MapPlugin;
@@ -37,16 +38,10 @@ pub struct AITimer(pub Timer);
 pub fn run() {
     App::new()
         .add_plugins(DefaultPlugins)
+        .insert_resource(GameConfig::default())
         .add_plugins(MapPlugin)
         .insert_resource(SpawnFaction::default())
         .insert_resource(CachedFrontline::default())
-        .insert_resource(AITimer(Timer::from_seconds(1.0, TimerMode::Repeating)))
-        .insert_resource(ReinforceTimer(Timer::from_seconds(
-            10.0,
-            TimerMode::Repeating,
-        )))
-        .insert_resource(SplitTimer(Timer::from_seconds(5.0, TimerMode::Repeating)))
-        .insert_resource(FlankTimer(Timer::from_seconds(1.0, TimerMode::Repeating)))
         .add_systems(
             Startup,
             (
@@ -91,11 +86,27 @@ pub fn run() {
         .run();
 }
 
-fn setup(mut commands: Commands) {
+fn setup(mut commands: Commands, config: Res<GameConfig>) {
     info!("Modern History simulation starting...");
     commands.spawn(Camera2dBundle::default());
+    commands.insert_resource(AITimer(Timer::from_seconds(
+        config.ai_order_interval,
+        TimerMode::Repeating,
+    )));
+    commands.insert_resource(ReinforceTimer(Timer::from_seconds(
+        config.reinforce_interval,
+        TimerMode::Repeating,
+    )));
+    commands.insert_resource(SplitTimer(Timer::from_seconds(
+        config.split_interval,
+        TimerMode::Repeating,
+    )));
+    commands.insert_resource(FlankTimer(Timer::from_seconds(
+        config.flank_interval,
+        TimerMode::Repeating,
+    )));
 }
 
-fn init_grid_history(mut commands: Commands, grid: Res<Grid>) {
-    commands.insert_resource(GridHistory::new(&grid));
+fn init_grid_history(mut commands: Commands, grid: Res<Grid>, config: Res<GameConfig>) {
+    commands.insert_resource(GridHistory::new(&grid, config.snapshot_interval));
 }

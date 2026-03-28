@@ -1,10 +1,12 @@
 use crate::army::Army;
+use crate::core::GameConfig;
 use bevy::prelude::*;
 
-const MERGE_RADIUS: f32 = 10.0;
-const MAX_ARMY_STRENGTH: f32 = 20000.0;
-
-pub fn consolidate_armies(mut commands: Commands, mut armies: Query<(Entity, &mut Army)>) {
+pub fn consolidate_armies(
+    mut commands: Commands,
+    mut armies: Query<(Entity, &mut Army)>,
+    config: Res<GameConfig>,
+) {
     let army_data: Vec<(Entity, Vec2, f32, i32)> = armies
         .iter()
         .map(|(entity, army)| (entity, army.position, army.strength, army.faction))
@@ -29,7 +31,7 @@ pub fn consolidate_armies(mut commands: Commands, mut armies: Query<(Entity, &mu
                 continue;
             }
 
-            if pos_a.distance(pos_b) > MERGE_RADIUS {
+            if pos_a.distance(pos_b) > config.merge_radius {
                 continue;
             }
 
@@ -40,7 +42,8 @@ pub fn consolidate_armies(mut commands: Commands, mut armies: Query<(Entity, &mu
             };
 
             if let Ok(mut survivor) = armies.get_mut(survivor_entity) {
-                let new_strength = (survivor.1.strength + absorb_strength).min(MAX_ARMY_STRENGTH);
+                let new_strength =
+                    (survivor.1.strength + absorb_strength).min(config.max_army_strength);
                 survivor.1.strength = new_strength;
             }
 

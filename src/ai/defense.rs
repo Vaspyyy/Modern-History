@@ -1,12 +1,9 @@
 use crate::ai::components::{ArmyOrder, DefendingBreakthrough};
 use crate::army::Army;
+use crate::core::GameConfig;
 use crate::map::grid::Grid;
 use crate::simulation::GridHistory;
 use bevy::prelude::*;
-
-const DEFEND_RADIUS: f32 = 80.0;
-const MIN_DEFENDER_STRENGTH: f32 = 1000.0;
-const CELL_SIZE: f32 = 3.0;
 
 struct ThreatCell {
     world_pos: Vec2,
@@ -18,9 +15,11 @@ pub fn defend_breakthroughs(
     mut armies: Query<(Entity, &Army, &mut ArmyOrder)>,
     grid: Res<Grid>,
     history: Res<GridHistory>,
+    config: Res<GameConfig>,
 ) {
-    let half_w = grid.width as f32 * CELL_SIZE / 2.0;
-    let half_h = grid.height as f32 * CELL_SIZE / 2.0;
+    let cell_size = config.cell_size;
+    let half_w = grid.width as f32 * cell_size / 2.0;
+    let half_h = grid.height as f32 * cell_size / 2.0;
 
     let control_delta = history.control_delta(&grid);
 
@@ -37,8 +36,8 @@ pub fn defend_breakthroughs(
                 continue;
             }
 
-            let world_x = x as f32 * CELL_SIZE - half_w;
-            let world_y = y as f32 * CELL_SIZE - half_h;
+            let world_x = x as f32 * cell_size - half_w;
+            let world_y = y as f32 * cell_size - half_h;
             let pos = Vec2::new(world_x, world_y);
 
             let target_faction: i32 = if cell.control < 0.0 { 1 } else { -1 };
@@ -95,7 +94,7 @@ pub fn defend_breakthroughs(
         .collect();
 
     for (entity, army, mut order) in &mut armies {
-        if army.strength < MIN_DEFENDER_STRENGTH {
+        if army.strength < config.min_defender_strength {
             commands.entity(entity).remove::<DefendingBreakthrough>();
             continue;
         }
@@ -124,7 +123,7 @@ pub fn defend_breakthroughs(
 
         for threat in threats.iter().take(20) {
             let d = army.position.distance(threat.world_pos);
-            if d > DEFEND_RADIUS * 4.0 {
+            if d > config.defend_radius * 4.0 {
                 continue;
             }
 

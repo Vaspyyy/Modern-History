@@ -1,8 +1,13 @@
 use crate::army::Army;
 use crate::city::Capital;
+use crate::core::GameConfig;
 use bevy::prelude::*;
 
-pub fn apply_supply(mut armies: Query<&mut Army>, capitals: Query<(&Capital, &Transform)>) {
+pub fn apply_supply(
+    mut armies: Query<&mut Army>,
+    capitals: Query<(&Capital, &Transform)>,
+    config: Res<GameConfig>,
+) {
     let capitals_vec: Vec<_> = capitals.iter().collect();
 
     for mut army in &mut armies {
@@ -19,12 +24,12 @@ pub fn apply_supply(mut armies: Query<&mut Army>, capitals: Query<(&Capital, &Tr
             }
         }
 
-        if nearest_dist < 200.0 {
-            army.strength += 2.0;
+        if nearest_dist < config.supply_range {
+            army.strength += config.supply_heal_rate;
         } else {
-            army.strength -= 1.0;
+            army.strength -= config.supply_attrition_rate;
         }
 
-        army.strength = army.strength.max(100.0);
+        army.strength = army.strength.max(config.min_army_strength);
     }
 }

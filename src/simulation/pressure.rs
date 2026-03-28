@@ -1,9 +1,10 @@
 use crate::army::Army;
+use crate::core::GameConfig;
 use crate::map::grid::Grid;
 use bevy::prelude::*;
 
-pub fn apply_pressure(mut grid: ResMut<Grid>, query: Query<&Army>) {
-    let cell_size = 3.0;
+pub fn apply_pressure(mut grid: ResMut<Grid>, query: Query<&Army>, config: Res<GameConfig>) {
+    let cell_size = config.cell_size;
     let influence_radius_cells = 10;
 
     for cell in &mut grid.cells {

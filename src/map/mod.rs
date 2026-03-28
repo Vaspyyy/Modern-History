@@ -2,6 +2,7 @@ pub mod chunk;
 pub mod grid;
 pub mod terrain;
 
+use crate::core::GameConfig;
 use bevy::prelude::*;
 use grid::*;
 
@@ -9,7 +10,11 @@ pub struct MapPlugin;
 
 impl Plugin for MapPlugin {
     fn build(&self, app: &mut App) {
-        app.insert_resource(Grid::new(256, 256));
+        let config = app
+            .world
+            .get_resource::<GameConfig>()
+            .expect("GameConfig must be inserted before MapPlugin");
+        app.insert_resource(Grid::new(config.grid_width, config.grid_height));
     }
 }
 

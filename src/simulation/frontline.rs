@@ -1,9 +1,8 @@
 use crate::map::grid::Grid;
 use bevy::prelude::*;
 
-pub fn detect_frontline(grid: &Grid) -> Vec<Vec2> {
+pub fn detect_frontline(grid: &Grid, cell_size: f32) -> Vec<Vec2> {
     let mut frontline = Vec::new();
-    let cell_size = 3.0;
     let half_w = grid.width as f32 * cell_size / 2.0;
     let half_h = grid.height as f32 * cell_size / 2.0;
     let neighbors: [(isize, isize); 4] = [(1, 0), (0, 1), (-1, 0), (0, -1)];

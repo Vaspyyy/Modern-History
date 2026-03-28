@@ -1,9 +1,15 @@
 use crate::army::Army;
+use crate::core::GameConfig;
 use bevy::prelude::*;
 
-pub fn apply_combat(mut commands: Commands, mut armies: Query<(Entity, &mut Army)>) {
-    let combat_radius = 40.0;
-    let damage_multiplier = 0.0005;
+pub fn apply_combat(
+    mut commands: Commands,
+    mut armies: Query<(Entity, &mut Army)>,
+    config: Res<GameConfig>,
+) {
+    let combat_radius = config.combat_radius;
+    let damage_multiplier = config.damage_multiplier;
+    let despawn_threshold = config.min_army_strength * 0.5;
 
     let army_data: Vec<(Entity, Vec2, f32, i32)> = armies
         .iter()
@@ -26,7 +32,7 @@ pub fn apply_combat(mut commands: Commands, mut armies: Query<(Entity, &mut Army
 
         army.strength -= total_damage;
 
-        if army.strength <= 50.0 {
+        if army.strength <= despawn_threshold {
             commands.entity(entity).despawn();
         }
     }

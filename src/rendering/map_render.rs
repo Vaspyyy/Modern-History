@@ -1,3 +1,4 @@
+use crate::core::GameConfig;
 use crate::map::grid::Grid;
 use bevy::prelude::*;
 
@@ -7,8 +8,8 @@ pub struct CellVisual {
     pub y: usize,
 }
 
-pub fn spawn_grid_visuals(mut commands: Commands, grid: Res<Grid>) {
-    let cell_size = 3.0;
+pub fn spawn_grid_visuals(mut commands: Commands, grid: Res<Grid>, config: Res<GameConfig>) {
+    let cell_size = config.cell_size;
 
     for y in 0..grid.height {
         for x in 0..grid.width {

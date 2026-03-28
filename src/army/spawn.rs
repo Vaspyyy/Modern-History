@@ -1,4 +1,5 @@
 use crate::army::Army;
+use crate::core::GameConfig;
 use bevy::prelude::*;
 
 #[derive(Resource, Default)]
@@ -6,7 +7,7 @@ pub struct SpawnFaction {
     pub faction: i32,
 }
 
-pub fn spawn_initial_armies(mut commands: Commands) {
+pub fn spawn_initial_armies(mut commands: Commands, config: Res<GameConfig>) {
     let count = 5i32;
 
     for i in -count..=count {
@@ -14,16 +15,16 @@ pub fn spawn_initial_armies(mut commands: Commands) {
 
         commands.spawn(Army {
             position: Vec2::new(-250.0, offset_y),
-            strength: 5000.0,
+            strength: config.initial_army_strength,
             faction: -1,
-            speed: 8.0,
+            speed: config.army_speed,
         });
 
         commands.spawn(Army {
             position: Vec2::new(250.0, offset_y),
-            strength: 5000.0,
+            strength: config.initial_army_strength,
             faction: 1,
-            speed: 8.0,
+            speed: config.army_speed,
         });
     }
 
@@ -37,6 +38,7 @@ pub fn spawn_army_on_click(
     mut spawn_faction: ResMut<SpawnFaction>,
     windows: Query<&Window>,
     cameras: Query<(&Camera, &GlobalTransform)>,
+    config: Res<GameConfig>,
 ) {
     if keys.just_pressed(KeyCode::Digit1) {
         spawn_faction.faction = -1;
@@ -59,9 +61,9 @@ pub fn spawn_army_on_click(
         {
             commands.spawn(Army {
                 position: world_position,
-                strength: 5000.0,
+                strength: config.initial_army_strength,
                 faction: spawn_faction.faction,
-                speed: 8.0,
+                speed: config.army_speed,
             });
 
             debug!(

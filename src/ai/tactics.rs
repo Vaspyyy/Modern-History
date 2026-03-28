@@ -1,13 +1,7 @@
 use crate::ai::components::{ArmyOrder, Flanking};
 use crate::army::Army;
+use crate::core::GameConfig;
 use bevy::prelude::*;
-
-const SALIENT_MIN_DEPTH: f32 = 30.0;
-const SALIENT_MIN_ENEMY_STRENGTH: f32 = 2000.0;
-const FLANK_OFFSET: f32 = 50.0;
-const MAX_FLANKERS_PER_SALIENT: usize = 4;
-const FLANK_FORCE_RATIO_THRESHOLD: f32 = 1.5;
-const FLANKER_RADIUS: f32 = 120.0;
 
 struct Salient {
     tip: Vec2,
@@ -21,6 +15,7 @@ fn detect_salients(
     frontline: &[Vec2],
     faction: i32,
     armies: &Query<(Entity, &Army)>,
+    config: &GameConfig,
 ) -> Vec<Salient> {
     if frontline.len() < 5 {
         return Vec::new();
@@ -57,7 +52,7 @@ fn detect_salients(
             sorted[i].x - expected_frontline[i]
         };
 
-        if deviation > SALIENT_MIN_DEPTH {
+        if deviation > config.salient_min_depth {
             deviations.push((i, deviation));
         }
     }
@@ -87,7 +82,7 @@ fn detect_salients(
                 sorted[j].x - expected_frontline[j]
             };
 
-            if current_dev > SALIENT_MIN_DEPTH * 0.5 {
+            if current_dev > config.salient_min_depth * 0.5 {
                 visited.insert(j);
                 max_idx = j;
                 if current_dev > max_dev {
@@ -108,7 +103,7 @@ fn detect_salients(
                 sorted[j].x - expected_frontline[j]
             };
 
-            if current_dev > SALIENT_MIN_DEPTH * 0.5 {
+            if current_dev > config.salient_min_depth * 0.5 {
                 visited.insert(j);
                 min_idx = j;
                 if current_dev > max_dev {
@@ -137,7 +132,7 @@ fn detect_salients(
             .map(|(_, s)| s)
             .sum();
 
-        if enemy_str < SALIENT_MIN_ENEMY_STRENGTH {
+        if enemy_str < config.salient_min_enemy_strength {
             continue;
         }
 
@@ -147,7 +142,7 @@ fn detect_salients(
             (tip.x - expected_frontline[start_idx]).max(0.0)
         };
 
-        if depth < SALIENT_MIN_DEPTH {
+        if depth < config.salient_min_depth {
             continue;
         }
 
@@ -205,6 +200,7 @@ pub fn assign_flanking_orders(
     mut timer: ResMut<FlankTimer>,
     time: Res<Time>,
     cached_frontline: Res<super::CachedFrontline>,
+    config: Res<GameConfig>,
 ) {
     let ticked = timer.0.tick(time.delta()).just_finished();
 
@@ -234,7 +230,7 @@ pub fn assign_flanking_orders(
 
     let factions = [-1, 1];
     for &faction in &factions {
-        let sals = detect_salients(&frontline, faction, &all_armies);
+        let sals = detect_salients(&frontline, faction, &all_armies, &config);
         if !sals.is_empty() {
             faction_salients.insert(faction, sals);
         }
@@ -256,8 +252,13 @@ pub fn assign_flanking_orders(
             continue;
         }
 
-        let ratio = local_force_ratio_at(army.position, army.faction, &all_armies, FLANKER_RADIUS);
-        if ratio < FLANK_FORCE_RATIO_THRESHOLD {
+        let ratio = local_force_ratio_at(
+            army.position,
+            army.faction,
+            &all_armies,
+            config.flanker_radius,
+        );
+        if ratio < config.flank_force_ratio_threshold {
             continue;
         }
 
@@ -270,7 +271,7 @@ pub fn assign_flanking_orders(
                 .distance(salient.base_left)
                 .min(army.position.distance(salient.base_right));
 
-            if dist_to_base > FLANKER_RADIUS * 2.0 {
+            if dist_to_base > config.flanker_radius * 2.0 {
                 continue;
             }
 
@@ -295,7 +296,7 @@ pub fn assign_flanking_orders(
 
             let salient_dir =
                 (salient.tip - (salient.base_left + salient.base_right) / 2.0).normalize_or_zero();
-            let behind_tip = salient.tip + salient_dir * FLANK_OFFSET;
+            let behind_tip = salient.tip + salient_dir * config.flank_offset;
 
             let to_target = (behind_tip - army.position).normalize_or_zero();
             let approach_target = base + to_target * 20.0;

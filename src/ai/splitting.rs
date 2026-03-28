@@ -1,11 +1,10 @@
 use crate::ai::ArmyOrder;
 use crate::army::Army;
+use crate::core::GameConfig;
 use crate::map::grid::Grid;
 use crate::simulation::detect_frontline;
 use bevy::prelude::*;
 
-const SPLIT_THRESHOLD: f32 = 10000.0;
-const SPLIT_RATIO: f32 = 0.4;
 const MIN_FRONTLINE_CLUSTERS: usize = 3;
 
 #[derive(Resource)]
@@ -65,12 +64,13 @@ pub fn ai_split_armies(
     grid: Res<Grid>,
     mut timer: ResMut<SplitTimer>,
     time: Res<Time>,
+    config: Res<GameConfig>,
 ) {
     if !timer.0.tick(time.delta()).finished() {
         return;
     }
 
-    let frontline = detect_frontline(&grid);
+    let frontline = detect_frontline(&grid, config.cell_size);
     if frontline.len() < MIN_FRONTLINE_CLUSTERS {
         return;
     }
@@ -89,7 +89,7 @@ pub fn ai_split_armies(
     };
 
     for (entity, mut army, order) in &mut armies {
-        if army.strength < SPLIT_THRESHOLD {
+        if army.strength < config.split_threshold {
             continue;
         }
 
@@ -98,7 +98,7 @@ pub fn ai_split_armies(
             continue;
         }
 
-        let split_strength = army.strength * SPLIT_RATIO;
+        let split_strength = army.strength * config.split_ratio;
         army.strength -= split_strength;
 
         let new_target = find_farthest_frontline(army.position, &frontline, order.target);

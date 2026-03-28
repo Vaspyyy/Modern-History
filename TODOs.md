@@ -129,7 +129,10 @@ Quick fixes that don't require architectural changes:
 
 ## Phase 1: Foundation
 
-### 1.1 GameConfig system (`src/core/config.rs`)
+### ~~1.1 GameConfig system (`src/core/config.rs`)~~ :white_check_mark:
+All 30+ scattered constants consolidated into `GameConfig` resource with `Default` impl.
+All systems updated to read from `Res<GameConfig>`. Capital positions and initial army
+count/positions remain hardcoded (to be derived from `Country` in TODO 1.4).
 
 **Depends on:** Phase 0 (core module bootstrapped)
 **Unblocks:** almost everything — terrain, army scaling, reinforcement, AI params, grid size

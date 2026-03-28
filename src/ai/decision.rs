@@ -1,17 +1,10 @@
 use crate::ai::{ArmyOrder, DefendingBreakthrough, Flanking};
 use crate::army::Army;
 use crate::city::Capital;
+use crate::core::GameConfig;
 use crate::map::grid::Grid;
 use crate::simulation::detect_frontline;
 use bevy::prelude::*;
-
-const COMBAT_RADIUS: f32 = 40.0;
-const STRENGTH_CHECK_RADIUS: f32 = 80.0;
-const RETREAT_STRENGTH: f32 = 500.0;
-const RECOVER_STRENGTH: f32 = 1500.0;
-const MIN_CONSOLIDATE_GROUP: f32 = 4000.0;
-const SUPPLY_RANGE: f32 = 200.0;
-const NUM_SECTORS: usize = 5;
 
 fn find_closest_point(army_pos: Vec2, points: &[Vec2]) -> Vec2 {
     let mut closest_dist = f32::MAX;
@@ -66,7 +59,12 @@ fn nearest_friendly_army_pos(
     best
 }
 
-fn local_force_ratio(army: &Army, armies: &Query<(Entity, &Army)>, self_entity: Entity) -> f32 {
+fn local_force_ratio(
+    army: &Army,
+    armies: &Query<(Entity, &Army)>,
+    self_entity: Entity,
+    config: &GameConfig,
+) -> f32 {
     let mut friendly: f32 = 0.0;
     let mut enemy: f32 = 0.0;
 
@@ -74,7 +72,7 @@ fn local_force_ratio(army: &Army, armies: &Query<(Entity, &Army)>, self_entity: 
         if entity == self_entity {
             continue;
         }
-        if army.position.distance(other.position) < STRENGTH_CHECK_RADIUS {
+        if army.position.distance(other.position) < config.strength_check_radius {
             if other.faction == army.faction {
                 friendly += other.strength;
             } else {
@@ -121,6 +119,7 @@ fn compute_frontline_sectors(
     faction: i32,
     armies: &Query<(Entity, &Army)>,
     grid: &Grid,
+    config: &GameConfig,
 ) -> FrontlineSectors {
     if frontline.len() < 2 {
         return FrontlineSectors {
@@ -136,7 +135,7 @@ fn compute_frontline_sectors(
         max_x = max_x.max(p.x);
     }
 
-    let n = NUM_SECTORS.min(frontline.len());
+    let n = config.num_sectors.min(frontline.len());
     let step = (max_x - min_x) / n as f32;
 
     let mut sector_centers: Vec<Vec2> = Vec::with_capacity(n);
@@ -144,7 +143,7 @@ fn compute_frontline_sectors(
     sector_points.resize(n, Vec::new());
     let mut sector_enemy_pressure: Vec<f32> = vec![0.0; n];
 
-    let cell_size = 3.0;
+    let cell_size = config.cell_size;
     let half_w = grid.width as f32 * cell_size / 2.0;
     let half_h = grid.height as f32 * cell_size / 2.0;
 
@@ -301,6 +300,7 @@ fn retreat_waypoint(
     capital: Vec2,
     armies: &Query<(Entity, &Army)>,
     self_entity: Entity,
+    config: &GameConfig,
 ) -> Vec2 {
     let to_capital = (capital - army.position).normalize_or_zero();
     let perpendicular = Vec2::new(-to_capital.y, to_capital.x);
@@ -322,7 +322,7 @@ fn retreat_waypoint(
         let candidate_to_cap = candidate.distance(capital);
         let score = min_enemy_d * 2.0 - candidate_to_cap;
 
-        if score > best_enemy_dist && min_enemy_d > COMBAT_RADIUS {
+        if score > best_enemy_dist && min_enemy_d > config.combat_radius {
             best_enemy_dist = score;
             best_pos = candidate;
         }
@@ -339,24 +339,25 @@ fn choose_target(
     capitals: &Query<(&Capital, &Transform)>,
     faction_counts: &std::collections::HashMap<i32, Vec<Vec2>>,
     grid: &Grid,
+    config: &GameConfig,
 ) -> Vec2 {
-    let force_ratio = local_force_ratio(army, all_armies, entity);
+    let force_ratio = local_force_ratio(army, all_armies, entity, config);
 
-    if force_ratio < 1.2 && army.strength < MIN_CONSOLIDATE_GROUP {
+    if force_ratio < 1.2 && army.strength < config.min_consolidate_group {
         if let Some(friendly_pos) = nearest_friendly_army_pos(army, all_armies, entity) {
             return friendly_pos;
         }
     }
 
     if !frontline.is_empty() {
-        let sectors = compute_frontline_sectors(frontline, army.faction, all_armies, grid);
+        let sectors = compute_frontline_sectors(frontline, army.faction, all_armies, grid, config);
         return select_sector_target(army, &sectors, faction_counts, frontline);
     }
 
     let capital = nearest_friendly_capital(army, capitals);
     let dist_to_cap = army.position.distance(capital);
 
-    if dist_to_cap < SUPPLY_RANGE && army.strength < 3000.0 {
+    if dist_to_cap < config.supply_range && army.strength < 3000.0 {
         return capital + Vec2::ZERO;
     }
 
@@ -380,8 +381,9 @@ pub fn assign_new_orders(
     all_armies: Query<(Entity, &Army)>,
     capitals: Query<(&Capital, &Transform)>,
     mut cached_frontline: ResMut<super::CachedFrontline>,
+    config: Res<GameConfig>,
 ) {
-    let frontline = detect_frontline(&grid);
+    let frontline = detect_frontline(&grid, config.cell_size);
     cached_frontline.0 = frontline.clone();
 
     let faction_counts = build_faction_positions(&all_armies);
@@ -395,6 +397,7 @@ pub fn assign_new_orders(
             &capitals,
             &faction_counts,
             &grid,
+            &config,
         );
 
         commands.entity(entity).try_insert(ArmyOrder {
@@ -417,13 +420,13 @@ pub fn assign_orders_timed(
     all_armies: Query<(Entity, &Army)>,
     capitals: Query<(&Capital, &Transform)>,
     cached_frontline: Res<super::CachedFrontline>,
+    config: Res<GameConfig>,
 ) {
     if !timer.0.tick(time.delta()).finished() {
         return;
     }
 
     let frontline = &cached_frontline.0;
-
     let faction_counts = build_faction_positions(&all_armies);
 
     for (entity, army) in &armies_without_order {
@@ -435,6 +438,7 @@ pub fn assign_orders_timed(
             &capitals,
             &faction_counts,
             &grid,
+            &config,
         );
 
         commands.entity(entity).try_insert(ArmyOrder {
@@ -445,32 +449,37 @@ pub fn assign_orders_timed(
 
     for (entity, army, mut order) in &mut armies_with_order {
         if order.retreating {
-            if army.strength >= RECOVER_STRENGTH {
+            if army.strength >= config.recover_strength {
                 order.retreating = false;
                 if !frontline.is_empty() {
-                    let sectors =
-                        compute_frontline_sectors(frontline, army.faction, &all_armies, &grid);
+                    let sectors = compute_frontline_sectors(
+                        frontline,
+                        army.faction,
+                        &all_armies,
+                        &grid,
+                        &config,
+                    );
                     order.target = select_sector_target(army, &sectors, &faction_counts, frontline);
                 }
             } else {
                 let capital = nearest_friendly_capital(army, &capitals);
-                let wp = retreat_waypoint(army, capital, &all_armies, entity);
+                let wp = retreat_waypoint(army, capital, &all_armies, entity, &config);
                 order.target = wp;
             }
             continue;
         }
 
-        let force_ratio = local_force_ratio(army, &all_armies, entity);
+        let force_ratio = local_force_ratio(army, &all_armies, entity, &config);
 
-        if army.strength < RETREAT_STRENGTH && force_ratio < 1.0 {
+        if army.strength < config.retreat_strength && force_ratio < 1.0 {
             order.retreating = true;
             let capital = nearest_friendly_capital(army, &capitals);
-            let wp = retreat_waypoint(army, capital, &all_armies, entity);
+            let wp = retreat_waypoint(army, capital, &all_armies, entity, &config);
             order.target = wp;
             continue;
         }
 
-        if force_ratio < 0.7 && army.strength < MIN_CONSOLIDATE_GROUP {
+        if force_ratio < 0.7 && army.strength < config.min_consolidate_group {
             if let Some(friendly_pos) = nearest_friendly_army_pos(army, &all_armies, entity) {
                 order.target = friendly_pos;
                 continue;
@@ -478,7 +487,8 @@ pub fn assign_orders_timed(
         }
 
         if !frontline.is_empty() {
-            let sectors = compute_frontline_sectors(frontline, army.faction, &all_armies, &grid);
+            let sectors =
+                compute_frontline_sectors(frontline, army.faction, &all_armies, &grid, &config);
             order.target = select_sector_target(army, &sectors, &faction_counts, frontline);
         }
     }
