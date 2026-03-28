@@ -27,6 +27,7 @@ use crate::rendering::update_army_visuals;
 use crate::rendering::update_grid_visuals;
 use crate::simulation::apply_combat;
 use crate::simulation::apply_pressure;
+use crate::simulation::apply_repulsion;
 use crate::simulation::apply_supply;
 use crate::simulation::snapshot_control;
 use crate::simulation::update_control;
@@ -91,7 +92,7 @@ pub fn run() {
         )
         .add_systems(
             Update,
-            (move_armies, reinforce_from_capitals)
+            (move_armies, reinforce_from_capitals, apply_repulsion)
                 .chain()
                 .in_set(MovementSet),
         )

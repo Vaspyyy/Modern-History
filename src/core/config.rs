@@ -53,6 +53,9 @@ pub struct GameConfig {
     pub flank_offset: f32,
     pub flank_force_ratio_threshold: f32,
     pub flanker_radius: f32,
+
+    pub repulsion_radius: f32,
+    pub repulsion_strength: f32,
 }
 
 impl Default for GameConfig {
@@ -109,6 +112,9 @@ impl Default for GameConfig {
             flank_offset: 50.0,
             flank_force_ratio_threshold: 1.5,
             flanker_radius: 120.0,
+
+            repulsion_radius: 30.0,
+            repulsion_strength: 5.0,
         }
     }
 }
