@@ -35,6 +35,15 @@ use bevy::prelude::*;
 #[derive(Resource)]
 pub struct AITimer(pub Timer);
 
+#[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
+pub struct SimulationSet;
+
+#[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
+pub struct AISet;
+
+#[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
+pub struct MovementSet;
+
 pub fn run() {
     App::new()
         .add_plugins(DefaultPlugins)
@@ -54,6 +63,38 @@ pub fn run() {
             )
                 .chain(),
         )
+        .configure_sets(Update, (SimulationSet, AISet, MovementSet).chain())
+        .add_systems(
+            Update,
+            (
+                snapshot_control,
+                consolidate_armies,
+                (apply_pressure, apply_supply, apply_combat).chain(),
+                update_control,
+            )
+                .chain()
+                .in_set(SimulationSet),
+        )
+        .add_systems(
+            Update,
+            (
+                assign_new_orders,
+                assign_orders_timed,
+                assign_flanking_orders,
+                defend_breakthroughs,
+                ai_split_armies,
+            )
+                .chain()
+                .in_set(AISet),
+        )
+        .add_systems(
+            Update,
+            (move_armies, reinforce_from_capitals)
+                .chain()
+                .in_set(MovementSet),
+        )
+        .add_systems(Update, update_grid_visuals.after(SimulationSet))
+        .add_systems(Update, spawn_army_on_click)
         .add_systems(
             PostUpdate,
             (
@@ -63,26 +104,6 @@ pub fn run() {
                 update_army_text,
             ),
         )
-        .add_systems(
-            Update,
-            (
-                snapshot_control,
-                consolidate_armies,
-                (apply_pressure, apply_supply, apply_combat).chain(),
-                (update_control, update_grid_visuals).chain(),
-                (
-                    assign_new_orders,
-                    assign_orders_timed,
-                    assign_flanking_orders,
-                    defend_breakthroughs,
-                    ai_split_armies,
-                )
-                    .chain(),
-                (move_armies, reinforce_from_capitals).chain(),
-            )
-                .chain(),
-        )
-        .add_systems(Update, spawn_army_on_click)
         .run();
 }
 

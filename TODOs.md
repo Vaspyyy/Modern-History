@@ -204,7 +204,10 @@ count/positions remain hardcoded (to be derived from `Country` in TODO 1.4).
   - `control.rs:6` (pressure application)
 - Keyboard shortcuts: `Space` = toggle pause, `+`/`-` = speed up/down
 
-### 1.3 System ordering
+### ~~1.3 System ordering~~ :white_check_mark:
+Replaced single `.chain()` with explicit `SystemSet` labels: `SimulationSet`, `AISet`,
+`MovementSet` — each with internal chaining. Visuals (`update_grid_visuals`) run after
+`SimulationSet` but before `AISet`. `spawn_army_on_click` runs independently.
 
 **Depends on:** 1.1 (so GameConfig is available during the restructure)
 **Unblocks:** correct simulation behavior for all subsequent features
