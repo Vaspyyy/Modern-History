@@ -116,7 +116,8 @@ Every subsequent feature will be easier to debug with proper logging instead of 
 - Use `info!` for game state changes (startup, victory, defeat)
 - Optional: add `--verbose` CLI flag to control log level
 
-### 0.6 Fix known bugs
+### ~~0.6 Fix known bugs~~ :white_check_mark:
+Fixed all three known bugs (KB-1, KB-2, KB-3). See commit `4646318`.
 Quick fixes that don't require architectural changes:
 
 - **KB-1 (strength floor):** change `combat.rs:29` threshold from `100.0` to `50.0`, or change `supply.rs:28` floor from `100.0` to `150.0` — either way ensures supply can't heal an army into the kill zone
