@@ -1,5 +1,6 @@
 pub mod combat;
 pub mod control;
+pub mod diffusion;
 pub mod frontline;
 pub mod grid_history;
 pub mod pressure;

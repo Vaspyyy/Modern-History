@@ -74,35 +74,25 @@ Phase 0 ── all independent, do immediately
 
 > No dependencies. All can be done immediately and independently.
 
-### 0.1 Bootstrap `core` module
-`src/core/mod.rs` is empty — no modules declared, nothing exported.
+### ~~0.1 Bootstrap `core` module~~ :white_check_mark:
+`src/core/mod.rs` now declares `pub mod config;` and `pub mod time;`. `mod core;` added to `main.rs`.
 
-- Add `pub mod config;`, `pub mod time;` to `src/core/mod.rs`
-- Export types from `app.rs` so other modules can `use crate::core::{GameConfig, GameClock, ...}`
-- Verify all files compile after registration
+### ~~0.2 Register all stub modules~~ :white_check_mark:
+All 8 stubs now declared in their parent `mod.rs`:
 
-### 0.2 Register all stub modules
-Several `.rs` files exist but are not declared in their parent `mod.rs`:
-
-| Stub file | Parent `mod.rs` | Currently declared? |
+| Stub file | Parent `mod.rs` | Done |
 |---|---|---|
-| `src/map/terrain.rs` | `src/map/mod.rs` | No — only `pub mod grid` exists |
-| `src/map/chunk.rs` | `src/map/mod.rs` | No |
-| `src/city/city.rs` | `src/city/mod.rs` | No — only `pub mod capital` exists |
-| `src/ai/strategy.rs` | `src/ai/mod.rs` | No |
-| `src/simulation/diffusion.rs` | `src/simulation/mod.rs` | No |
-| `src/rendering/ui.rs` | `src/rendering/mod.rs` | No |
-| `src/core/config.rs` | `src/core/mod.rs` | No (empty file) |
-| `src/core/time.rs` | `src/core/mod.rs` | No (empty file) |
+| `src/map/terrain.rs` | `src/map/mod.rs` | :white_check_mark: |
+| `src/map/chunk.rs` | `src/map/mod.rs` | :white_check_mark: |
+| `src/city/city.rs` | `src/city/mod.rs` | :white_check_mark: |
+| `src/ai/strategy.rs` | `src/ai/mod.rs` | :white_check_mark: |
+| `src/simulation/diffusion.rs` | `src/simulation/mod.rs` | :white_check_mark: |
+| `src/rendering/ui.rs` | `src/rendering/mod.rs` | :white_check_mark: |
+| `src/core/config.rs` | `src/core/mod.rs` | :white_check_mark: |
+| `src/core/time.rs` | `src/core/mod.rs` | :white_check_mark: |
 
-- Add `pub mod` declarations for each
-- Add minimal placeholder types (empty structs or `todo!()` functions) so the project compiles
-
-### 0.3 Remove unused `avian2d` dependency
-`avian2d = "0.6"` in `Cargo.toml:8` is never imported anywhere.
-
-- Remove the line from `Cargo.toml`
-- Run `cargo build` to verify
+### ~~0.3 Remove unused `avian2d` dependency~~ :white_check_mark:
+Removed `avian2d = "0.6"` from `Cargo.toml`. Verified build succeeds.
 
 ### 0.4 Color armies by faction
 Currently all armies render as `Color::BLACK` (`src/rendering/army_render.rs:20`).

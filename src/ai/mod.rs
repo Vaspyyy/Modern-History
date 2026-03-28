@@ -2,6 +2,7 @@ pub mod components;
 pub mod decision;
 pub mod defense;
 pub mod splitting;
+pub mod strategy;
 pub mod tactics;
 
 pub use components::{ArmyOrder, DefendingBreakthrough, Flanking};

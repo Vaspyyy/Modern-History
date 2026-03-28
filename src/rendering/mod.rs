@@ -1,6 +1,7 @@
 pub mod army_render;
 pub mod capital_render;
 pub mod map_render;
+pub mod ui;
 
 pub use army_render::{
     attach_army_visuals, cleanup_orphan_army_text, update_army_text, update_army_visuals,

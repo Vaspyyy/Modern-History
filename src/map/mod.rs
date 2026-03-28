@@ -1,4 +1,6 @@
+pub mod chunk;
 pub mod grid;
+pub mod terrain;
 
 use bevy::prelude::*;
 use grid::*;

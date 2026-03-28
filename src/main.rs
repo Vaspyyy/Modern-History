@@ -2,6 +2,7 @@ mod ai;
 mod app;
 mod army;
 mod city;
+mod core;
 mod map;
 mod rendering;
 mod simulation;
