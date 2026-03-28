@@ -92,7 +92,7 @@ pub fn run() {
 }
 
 fn setup(mut commands: Commands) {
-    println!("Modern History simulation starting...");
+    info!("Modern History simulation starting...");
     commands.spawn(Camera2dBundle::default());
 }
 

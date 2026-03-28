@@ -27,7 +27,7 @@ pub fn spawn_initial_armies(mut commands: Commands) {
         });
     }
 
-    println!("Spawned initial armies: {} per faction", (count * 2 + 1));
+    info!("Spawned {} armies per faction", count * 2 + 1);
 }
 
 pub fn spawn_army_on_click(
@@ -40,12 +40,12 @@ pub fn spawn_army_on_click(
 ) {
     if keys.just_pressed(KeyCode::Digit1) {
         spawn_faction.faction = -1;
-        println!("Spawn faction set to: red (-1)");
+        debug!("Spawn faction set to: red (-1)");
     }
 
     if keys.just_pressed(KeyCode::Digit2) {
         spawn_faction.faction = 1;
-        println!("Spawn faction set to: blue (+1)");
+        debug!("Spawn faction set to: blue (+1)");
     }
 
     if buttons.just_pressed(MouseButton::Left) {
@@ -64,8 +64,8 @@ pub fn spawn_army_on_click(
                 speed: 8.0,
             });
 
-            println!(
-                "Spawned army at ({:.1}, {:.1}) with faction {}",
+            debug!(
+                "Spawned army at ({:.1}, {:.1}) faction={}",
                 world_position.x, world_position.y, spawn_faction.faction
             );
         }

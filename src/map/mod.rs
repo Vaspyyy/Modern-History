@@ -38,5 +38,5 @@ pub fn setup_grid(mut grid: ResMut<Grid>) {
     let left_value = grid.get(0, 0).control;
     let right_value = grid.get(grid.width - 1, 0).control;
 
-    println!("Sample values: left={}, right={}", left_value, right_value);
+    debug!("Sample values: left={}, right={}", left_value, right_value);
 }

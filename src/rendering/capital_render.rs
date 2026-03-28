@@ -33,5 +33,5 @@ pub fn spawn_capitals(mut commands: Commands) {
         CapitalVisual,
     ));
 
-    println!("Capitals spawned");
+    debug!("Capitals spawned");
 }

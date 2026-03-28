@@ -100,7 +100,8 @@ Currently all armies render as `Color::BLACK` (`src/rendering/army_render.rs:20`
 - Change `color: Color::BLACK` to faction-based: faction `-1` → `Color::rgb(1.0, 0.2, 0.2)`, faction `1` → `Color::rgb(0.2, 0.4, 1.0)` (matching the grid colors in `map_render.rs`)
 - This is a one-line change now; a proper `Country.color` lookup comes with TODO 1.4
 
-### 0.5 Logging and diagnostics
+### ~~0.5 Logging and diagnostics~~ :white_check_mark:
+All `println!` calls replaced with structured `tracing` macros (`info!`, `debug!`).
 Every subsequent feature will be easier to debug with proper logging instead of `println!`.
 
 - Replace all `println!` with structured logging:

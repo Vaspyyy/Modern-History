@@ -39,7 +39,7 @@ pub fn spawn_grid_visuals(mut commands: Commands, grid: Res<Grid>) {
         }
     }
 
-    println!("Grid visuals spawned");
+    debug!("Grid visuals spawned");
 }
 
 pub fn update_grid_visuals(grid: Res<Grid>, mut query: Query<(&CellVisual, &mut Sprite)>) {
