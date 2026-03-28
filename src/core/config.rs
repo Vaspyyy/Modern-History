@@ -28,7 +28,6 @@ pub struct GameConfig {
     pub reinforce_strength: f32,
     pub reinforce_speed: f32,
     pub army_spacing: f32,
-    pub stagger_interval: f32,
 
     pub snapshot_interval: f32,
 
@@ -85,7 +84,6 @@ impl Default for GameConfig {
             reinforce_strength: 3000.0,
             reinforce_speed: 8.0,
             army_spacing: 20.0,
-            stagger_interval: 2.5,
 
             snapshot_interval: 1.0,
 

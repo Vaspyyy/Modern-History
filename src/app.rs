@@ -11,6 +11,7 @@ use crate::army::move_armies;
 use crate::army::reinforce_from_capitals;
 use crate::army::spawn_army_on_click;
 use crate::army::spawn_initial_armies;
+use crate::army::ReinforceTickCounter;
 use crate::army::ReinforceTimer;
 use crate::army::SpawnFaction;
 use crate::core::GameConfig;
@@ -51,6 +52,7 @@ pub fn run() {
         .add_plugins(MapPlugin)
         .insert_resource(SpawnFaction::default())
         .insert_resource(CachedFrontline::default())
+        .insert_resource(ReinforceTickCounter(0))
         .add_systems(
             Startup,
             (
