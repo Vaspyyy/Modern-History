@@ -29,7 +29,7 @@ pub fn reinforce_from_capitals(
     let army_count_by_faction =
         |faction: i32| -> usize { armies.iter().filter(|a| a.faction == faction).count() };
 
-    let elapsed = timer.0.elapsed().as_secs_f32();
+    let elapsed = time.elapsed().as_secs_f32();
 
     for (i, capital) in capitals.iter().enumerate() {
         let faction = capital.faction;
